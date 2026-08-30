@@ -1,0 +1,31 @@
+// Resolves Node.js for Gradle (Gradle daemon does not load nvm/fnm shell PATH).
+ext.resolveNodeExecutable = {
+    def nodeEnv = System.getenv("NODE_BINARY")
+    if (nodeEnv != null && !nodeEnv.isEmpty()) {
+        return nodeEnv
+    }
+
+    def home = System.getProperty("user.home")
+    def nvmDir = new File("${home}/.nvm/versions/node")
+    if (nvmDir.exists()) {
+        def versions = nvmDir.listFiles()?.findAll { it.isDirectory() }?.sort()?.reverse()
+        if (versions != null && !versions.isEmpty()) {
+            def nodeFile = new File(versions[0], "bin/node")
+            if (nodeFile.exists()) {
+                return nodeFile.absolutePath
+            }
+        }
+    }
+
+    def candidates = [
+        "/opt/homebrew/bin/node",
+        "/usr/local/bin/node",
+    ]
+    for (path in candidates) {
+        if (new File(path).exists()) {
+            return path
+        }
+    }
+
+    return "node"
+}
